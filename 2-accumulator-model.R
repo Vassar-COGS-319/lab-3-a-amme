@@ -14,14 +14,27 @@
 # so faster rates mean that less evidence is likely to accumulate on each step. we could make
 # these parameters more intuitive by taking 1/rate.1 and 1/rate.2 as the values to rexp().
 
-accumulator.model <- function(samples, rate.1=40, rate.2=40, criterion=3){
+accumulator.model <- function(samples, rate.1=40, rate.2=40, criterion=3) {
+  output <- data.frame(matrix(ncol = 2, nrow = 0))
   
-
-  output <- data.frame(
-    correct = accuracy.array,
-    rt = rt.array
-  )
-  
+  for (i in seq(from = 1, to = samples)) {
+    int.ev.sig.1 <- 0
+    int.ev.sig.2 <- 0
+    rt <- 0
+    while ((-criterion <= int.ev.sig.2) && (int.ev.sig.1 <= criterion)) {
+      new.ev.1 <- rexp(1, rate = rate.1)
+      new.ev.2 <- rexp(1, rate = rate.2)
+      int.ev.sig.1 <- int.ev.sig.1 + new.ev.1
+      int.ev.sig.2 <- int.ev.sig.2 - new.ev.2
+      rt <- rt + 1
+    }
+    correct = TRUE
+    if (int.ev.sig.2 < -criterion) {
+      correct = FALSE
+    }
+    output <- rbind(output, data.frame(correct, rt))
+  }
+  output <- setNames(output, c("correct", "rt"))
   return(output)
 }
 

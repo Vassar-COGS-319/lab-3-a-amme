@@ -14,12 +14,93 @@
 
 # You don't need to get a perfect match. Just get in the ballpark. 
 
+random.walk.model <- function(samples, drift=0, sdrw=0.3, criterion=3) {
+  output <- data.frame(matrix(ncol = 2, nrow = 0))
+  
+  for (i in seq(from = 1, to = samples)) {
+    int_ev_sig <- 0
+    rt <- 0
+    while ((-criterion <= int_ev_sig) && (int_ev_sig <= criterion)) {
+      new_ev <- rnorm(1, mean = drift, sd = sdrw)
+      int_ev_sig <- int_ev_sig + new_ev
+      rt <- rt + 1
+    }
+    correct = TRUE
+    if (int_ev_sig < -criterion) {
+      correct = FALSE
+    }
+    output <- rbind(output, data.frame(correct, rt))
+  }
+  output <- setNames(output, c("correct", "rt"))
+  return(output)
+}
+
+accumulator.model <- function(samples, rate.1=40, rate.2=40, criterion=3) {
+  output <- data.frame(matrix(ncol = 2, nrow = 0))
+  
+  for (i in seq(from = 1, to = samples)) {
+    int.ev.sig.1 <- 0
+    int.ev.sig.2 <- 0
+    rt <- 0
+    while ((-criterion <= int.ev.sig.2) && (int.ev.sig.1 <= criterion)) {
+      new.ev.1 <- rexp(1, rate = rate.1)
+      new.ev.2 <- rexp(1, rate = rate.2)
+      int.ev.sig.1 <- int.ev.sig.1 + new.ev.1
+      int.ev.sig.2 <- int.ev.sig.2 - new.ev.2
+      rt <- rt + 1
+    }
+    correct = TRUE
+    if (int.ev.sig.2 < -criterion) {
+      correct = FALSE
+    }
+    output <- rbind(output, data.frame(correct, rt))
+  }
+  output <- setNames(output, c("correct", "rt"))
+  return(output)
+}
+
+# GOALS:
+  # mean RT correct = 250ms
+  # mean RT incorrect = 246ms
+  # accuracy = 0.80
+
+test.rw <- random.walk.model(1000, drift=0.018, sdrw=0.3, criterion=3)
+
+sum(test.rw$correct) / length(test.rw$correct)
+mean(filter(test.rw, correct == TRUE)$rt)
+mean(filter(test.rw, correct == FALSE)$rt)
+
+test.ac <- accumulator.model(1000, rate.1=82, rate.2=90, criterion=3)
+
+sum(test.ac$correct) / length(test.ac$correct)
+mean(filter(test.ac, correct == TRUE)$rt)
+mean(filter(test.ac, correct == FALSE)$rt)
 
 # Can both models do a reasonable job of accounting for the mean RT and accuracy? Report the
 # results of your efforts:
 
+# Both models do a decent job with accuracy, but the RW model can't account for the RT. The ACC 
+#   model, on the other hand, can nail both accuracy and RT.
 
 # Using the parameters that you found above, plot histograms of the distribution of RTs
 # predicted by each model. Based on these distributions, what kind of information could
 # we use to evaluate which model is a better descriptor of the data for the experiment?
 # Describe briefly how you might make this evaluation.
+
+library(dplyr)
+
+rw.correct.data <- test.rw %>% filter(correct==TRUE)
+rw.incorrect.data <- test.rw %>% filter(correct==FALSE)
+
+hist(rw.correct.data$rt)
+hist(rw.incorrect.data$rt)
+
+ac.correct.data <- test.ac %>% filter(correct==TRUE)
+ac.incorrect.data <- test.ac %>% filter(correct==FALSE)
+
+hist(ac.correct.data$rt)
+hist(ac.incorrect.data$rt)
+
+# We can use the mode and skew of the distributions to determine which are most "focused" 
+#   about the intended response time. A well-fitting distribution will have little to no skew
+#   and will have one mode approximately equal to the average response time from the data. 
