@@ -29,9 +29,9 @@ accumulator.model <- function(samples, rate.1=40, rate.2=40, criterion=3) {
       rt <- rt + 1
     }
     correct = TRUE
-    if (int.ev.sig.2 < -criterion) {
+    if (((-1)*(int.ev.sig.2 - criterion)) > (int.ev.sig.1 + criterion)) {
       correct = FALSE
-    }
+    } 
     output <- rbind(output, data.frame(correct, rt))
   }
   output <- setNames(output, c("correct", "rt"))
