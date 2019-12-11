@@ -82,6 +82,14 @@ mean(filter(test.ac, correct == FALSE)$rt)
 # Both models do a decent job with accuracy, but the RW model can't account for the RT. The ACC 
 #   model, on the other hand, can nail both accuracy and RT.
 
+test2.rw <- random.walk.model(1000, drift=0.012, sdrw=0.3, criterion=4.8)
+sum(test2.rw$correct) / length(test.rw$correct)
+mean(filter(test2.rw, correct == TRUE)$rt)
+mean(filter(test2.rw, correct == FALSE)$rt)
+
+# Revision: I thought that the RW model couldn't be made to predict the mean RT, but 
+#   the above code shows how I was wrong. 
+
 # Using the parameters that you found above, plot histograms of the distribution of RTs
 # predicted by each model. Based on these distributions, what kind of information could
 # we use to evaluate which model is a better descriptor of the data for the experiment?
